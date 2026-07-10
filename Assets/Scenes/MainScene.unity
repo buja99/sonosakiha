@@ -420,8 +420,8 @@ MonoBehaviour:
   player: {fileID: 441886773}
   faceSize: 6
   tileSize: 2
-  goalScale: 0.5
-  goalInsideOffset: 0.5
+  goalScale: 1
+  goalInsideOffset: 1
   rotatePreview: 0
   previewRotationSpeed: 8
   previewPosition: {x: 0, y: 0, z: 0}

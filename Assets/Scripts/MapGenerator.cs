@@ -101,7 +101,7 @@ public class MapGenerator : MonoBehaviour
 
                 // Assign a prefab based on the value
                 if (cellData == "2") tilePrefab = wellTilePrefab;
-                else if (cellData == "1" || cellData == "5") tilePrefab = pathTilePrefab;
+                else if (cellData == "1" || cellData == "5" || cellData == "4") tilePrefab = pathTilePrefab;
                 else if (cellData == "3") tilePrefab = trapTilePrefab;
                 else if (cellData == "4") tilePrefab = goalTilePrefab;
                 // Skip creation if the value is '0' (empty space)
@@ -111,11 +111,14 @@ public class MapGenerator : MonoBehaviour
                     GameObject tile = Instantiate(tilePrefab, faceParent.transform);
                     tile.transform.localPosition = tilePos; // Set the local position
 
-                    if (cellData == "4")
+                    if (cellData == "4" && goalTilePrefab != null)
                     {
-                        tile.transform.localScale = Vector3.one * goalScale;
+                        GameObject goal = Instantiate(goalTilePrefab, faceParent.transform);
 
-                        tile.transform.localPosition += Vector3.up * goalInsideOffset;
+                        goal.transform.localPosition = tilePos + Vector3.up * goalInsideOffset;
+                        goal.transform.localRotation = Quaternion.identity;
+
+                        goal.transform.localScale = goal.transform.localScale * goalScale;
                     }
 
                     if (cellData == "5" && player != null)
