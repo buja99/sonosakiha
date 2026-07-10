@@ -8,9 +8,10 @@ public class MapGenerator : MonoBehaviour
     public TextAsset csvFile; // Load the CSV file placed in the Resources folder
 
     [Header("Tile Prefabs")]
-    public GameObject wellTilePrefab; //  1
-    public GameObject pathTilePrefab; //  2
-    public GameObject trapTilePrefab; //  3
+    public GameObject wellTilePrefab;  // 2 = Wall
+    public GameObject pathTilePrefab;  // 1 = Path
+    public GameObject trapTilePrefab;  // 3 = Trap
+    public GameObject goalTilePrefab;  // 4 = Goal
     //
 
     [Header("Player Settings")]
@@ -20,6 +21,15 @@ public class MapGenerator : MonoBehaviour
     public int faceSize = 6; // Grid size of a single face
     public float tileSize = 1f; // Size of a single tile
 
+    [Header("Goal Settings")]
+    public float goalScale = 0.5f;
+    public float goalInsideOffset = 0.25f;
+
+    [Header("Title Preview Settings")]
+    public bool rotatePreview = false;
+    public float previewRotationSpeed = 8f;
+    public Vector3 previewPosition = Vector3.zero;
+    public Vector3 previewScale = Vector3.one;
     void Start()
     {
         GenerateCubeMap();
@@ -38,7 +48,14 @@ public class MapGenerator : MonoBehaviour
 
         // 2. Create the central pillar parent object
         GameObject cubeMapCenter = new GameObject("CubeMap_Center");
-        cubeMapCenter.transform.position = Vector3.zero;
+        cubeMapCenter.transform.position = previewPosition;
+        cubeMapCenter.transform.localScale = previewScale;
+
+        if (rotatePreview)
+        {
+            TitleMapRotator rotator = cubeMapCenter.AddComponent<TitleMapRotator>();
+            rotator.rotationSpeed = previewRotationSpeed;
+        }
 
         float half = faceSize * tileSize / 2f;
 
@@ -86,12 +103,20 @@ public class MapGenerator : MonoBehaviour
                 if (cellData == "2") tilePrefab = wellTilePrefab;
                 else if (cellData == "1" || cellData == "5") tilePrefab = pathTilePrefab;
                 else if (cellData == "3") tilePrefab = trapTilePrefab;
+                else if (cellData == "4") tilePrefab = goalTilePrefab;
                 // Skip creation if the value is '0' (empty space)
 
                 if (tilePrefab != null)
                 {
                     GameObject tile = Instantiate(tilePrefab, faceParent.transform);
                     tile.transform.localPosition = tilePos; // Set the local position
+
+                    if (cellData == "4")
+                    {
+                        tile.transform.localScale = Vector3.one * goalScale;
+
+                        tile.transform.localPosition += Vector3.up * goalInsideOffset;
+                    }
 
                     if (cellData == "5" && player != null)
                     {
