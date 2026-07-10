@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Mat_TitleGradient
+  m_Name: Mat_TitleGradientU
   m_Shader: {fileID: -6465566751694194690, guid: 30852e24b59e9914e9a6ff0a80e15be1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
