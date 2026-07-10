@@ -37,10 +37,18 @@ public class MapGenerator : MonoBehaviour
 
     void GenerateCubeMap()
     {
-        if (csvFile == null)
+        Transform oldChildCube = transform.Find("CubeMap_Center");
+
+        if (oldChildCube != null)
         {
-            Debug.LogError("CSV file is not assigned!");
-            return;
+            Destroy(oldChildCube.gameObject);
+        }
+
+        GameObject oldWorldCube = GameObject.Find("CubeMap_Center");
+
+        if (oldWorldCube != null)
+        {
+            Destroy(oldWorldCube);
         }
 
         // 1. Split CSV data into rows
@@ -48,14 +56,30 @@ public class MapGenerator : MonoBehaviour
 
         // 2. Create the central pillar parent object
         GameObject cubeMapCenter = new GameObject("CubeMap_Center");
-        cubeMapCenter.transform.position = previewPosition;
-        cubeMapCenter.transform.localScale = previewScale;
-
         if (rotatePreview)
         {
+            cubeMapCenter.transform.SetParent(transform);
+            cubeMapCenter.transform.localPosition = previewPosition;
+            cubeMapCenter.transform.localRotation = Quaternion.identity;
+            cubeMapCenter.transform.localScale = previewScale;
+
             TitleMapRotator rotator = cubeMapCenter.AddComponent<TitleMapRotator>();
             rotator.rotationSpeed = previewRotationSpeed;
         }
+        else
+        {
+            cubeMapCenter.transform.position = previewPosition;
+            cubeMapCenter.transform.rotation = Quaternion.identity;
+            cubeMapCenter.transform.localScale = Vector3.one;
+        }
+        //cubeMapCenter.transform.position = previewPosition;
+        //cubeMapCenter.transform.localScale = previewScale;
+
+        //if (rotatePreview)
+        //{
+        //    TitleMapRotator rotator = cubeMapCenter.AddComponent<TitleMapRotator>();
+        //    rotator.rotationSpeed = previewRotationSpeed;
+        //}
 
         float half = faceSize * tileSize / 2f;
 
@@ -73,9 +97,10 @@ public class MapGenerator : MonoBehaviour
     {
         // Create an empty object for the face
         GameObject faceParent = new GameObject("Face_" + faceName);
-        faceParent.transform.SetParent(parent.transform);
-        faceParent.transform.localPosition = offsetPosition; // Move it to the center of each face
-        faceParent.transform.localRotation = faceRotation;   // Rotate it to the correct orientation
+        faceParent.transform.SetParent(parent.transform, false);
+        faceParent.transform.localPosition = offsetPosition;
+        faceParent.transform.localRotation = faceRotation;
+        faceParent.transform.localScale = Vector3.one;
 
         // Create tiles from the specified CSV range
         for (int row = 0; row < faceSize; row++)
@@ -110,11 +135,11 @@ public class MapGenerator : MonoBehaviour
                 {
                     GameObject tile = Instantiate(tilePrefab, faceParent.transform);
                     tile.transform.localPosition = tilePos; // Set the local position
+                   
 
                     if (cellData == "4")
                     {
-                        tile.transform.localScale = Vector3.one * goalScale;
-
+                        tile.transform.localScale = tile.transform.localScale * goalScale;
                         tile.transform.localPosition += Vector3.up * goalInsideOffset;
                     }
 
