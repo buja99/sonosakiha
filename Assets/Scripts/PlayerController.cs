@@ -1,5 +1,7 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
+using System;
 
 public class PlayerController : MonoBehaviour
 {
@@ -9,7 +11,7 @@ public class PlayerController : MonoBehaviour
     public float rotationDuration = 0.2f; // Duration of rotation
 
     private bool isMoving = false;
-    private bool hasRotated = false;
+    //private bool hasRotated = false;
 
     [Header("Cube Surface Settings")]
     public LayerMask groundLayer;
@@ -26,37 +28,173 @@ public class PlayerController : MonoBehaviour
     public float surfaceMoveOffset = 0.8f;
     private Vector3 currentUp;
 
+    [Header("Cannot Move Debug")]
+    public bool debugCannotMove = true;
+    public TextMeshProUGUI cannotMoveDebugText;
+
+    private int cannotMoveJudgeCount = 0;
+    private int cannotMoveTextShowCount = 0;
+
     [Header("Cube Center")]
     public Transform cubeCenter;
 
+    [Header("UI")]
+    public TextMeshProUGUI cannotMoveText;
+    public float messageTime = 1.0f;
+
+    private Coroutine messageCoroutine;
+
+    private int selectedDirection = 0; // -1 = left, 0 = forward, 1 = right
+
+    private Vector3 baseForward;
+    private Vector3 selectedMoveDirection;
+    private Coroutine rotateCoroutine;
+    private bool canControl = true;
+
+    void Awake()
+    {
+        if (cannotMoveText != null)
+        {
+            cannotMoveText.gameObject.SetActive(false);
+        }
+    }
+
     void Start()
     {
-        currentUp = transform.up;
+        currentUp = transform.up.normalized;
+
+        baseForward = Vector3.ProjectOnPlane(transform.forward, currentUp).normalized;
+
+        if (baseForward.sqrMagnitude < 0.001f)
+        {
+            baseForward = transform.forward.normalized;
+        }
+
+        selectedDirection = 0;
+        selectedMoveDirection = baseForward;
+
+        transform.rotation = Quaternion.LookRotation(baseForward, currentUp);
+
+        if (cannotMoveText != null)
+        {
+            cannotMoveText.gameObject.SetActive(false);
+        }
     }
 
     void Update()
     {
+        if (!canControl) return;
+        if (Time.timeScale == 0f) return;
 
         if (isMoving) return;
 
         CheckGround();
 
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Input.GetKeyDown(KeyCode.A))
         {
-            StartCoroutine(MoveForward());
-        }
-        else if (Input.GetKeyDown(KeyCode.A) && !hasRotated)
-        {
-            StartCoroutine(Rotate(-90f));
-        }
-        else if (Input.GetKeyDown(KeyCode.D) && !hasRotated)
-        {
-            StartCoroutine(Rotate(90f));
+            int nextDirection = selectedDirection - 1;
+
+            if (nextDirection < -1)
+            {
+                nextDirection = -1;
+            }
+
+            if (nextDirection == selectedDirection)
+            {
+                return;
+            }
+
+            Vector3 nextMoveDirection = GetDirectionFromSelection(nextDirection);
+
+            if (IsWallInDirection(nextMoveDirection))
+            {
+                ShowCannotMoveMessage();
+                return;
+            }
+
+            selectedDirection = nextDirection;
+            selectedMoveDirection = nextMoveDirection;
+
+            RotateVisualToSelectedDirection();
         }
 
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            int nextDirection = selectedDirection + 1;
 
+            if (nextDirection > 1)
+            {
+                nextDirection = 1;
+            }
+
+            if (nextDirection == selectedDirection)
+            {
+                return;
+            }
+
+            Vector3 nextMoveDirection = GetDirectionFromSelection(nextDirection);
+
+            if (IsWallInDirection(nextMoveDirection))
+            {
+                ShowCannotMoveMessage();
+                return;
+            }
+
+            selectedDirection = nextDirection;
+            selectedMoveDirection = nextMoveDirection;
+
+            RotateVisualToSelectedDirection();
+        }
+
+        if (Input.GetKeyDown(KeyCode.W) )
+        {
+            StartCoroutine(MoveToSelectedDirection());
+        }
     }
+    public void SetControlEnabled(bool enabled)
+    {
+        canControl = enabled;
 
+        if (!enabled)
+        {
+            HideCannotMoveMessage();
+        }
+    }
+    public void InitializeStartDirection(Vector3 startUp, Vector3 startForward)
+    {
+        currentUp = startUp.normalized;
+
+        Vector3 forward = Vector3.ProjectOnPlane(startForward, currentUp).normalized;
+        Vector3 right = Quaternion.AngleAxis(90f, currentUp) * forward;
+        Vector3 left = Quaternion.AngleAxis(-90f, currentUp) * forward;
+
+        if (!IsWallInDirection(forward))
+        {
+            baseForward = forward;
+        }
+        else if (!IsWallInDirection(right))
+        {
+            baseForward = right;
+        }
+        else if (!IsWallInDirection(left))
+        {
+            baseForward = left;
+        }
+        else
+        {
+            baseForward = forward;
+        }
+
+        selectedDirection = 0;
+        selectedMoveDirection = baseForward;
+
+        transform.rotation = Quaternion.LookRotation(baseForward, currentUp);
+
+        if (cannotMoveText != null)
+        {
+            cannotMoveText.gameObject.SetActive(false);
+        }
+    }
     void CheckGround()
     {
         RaycastHit hit;
@@ -67,50 +205,33 @@ public class PlayerController : MonoBehaviour
         {
             Vector3 newUp = GetInsideUp(hit.point);
 
-            currentUp = newUp;
+            if (Vector3.Angle(currentUp, newUp) > 1f)
+            {
+                Vector3 fixedForward = Vector3.ProjectOnPlane(transform.forward, newUp).normalized;
 
-            Quaternion targetRotation = Quaternion.FromToRotation(transform.up, currentUp) * transform.rotation;
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
+                if (fixedForward.sqrMagnitude < 0.001f)
+                {
+                    fixedForward = Vector3.ProjectOnPlane(baseForward, newUp).normalized;
+                }
+
+                currentUp = newUp;
+                baseForward = fixedForward;
+
+                selectedDirection = 0;
+                selectedMoveDirection = baseForward;
+
+                transform.rotation = Quaternion.LookRotation(baseForward, currentUp);
+            }
+            else
+            {
+                currentUp = newUp;
+            }
 
             transform.position = hit.point + currentUp * playerHeightOffset;
         }
     }
 
-    IEnumerator MoveForward()
-    {
-        isMoving = true;
 
-        if (IsWallInFront())
-        {
-            hasRotated = false;
-            isMoving = false;
-            yield break;
-        }
-
-        RaycastHit frontGroundHit;
-        if (TryGetFrontGround(out frontGroundHit))
-        {
-            yield return MoveToNewSurface(frontGroundHit);
-            hasRotated = false;
-            isMoving = false;
-            yield break;
-        }
-
-        Vector3 startPos = transform.position;
-        Vector3 targetPos = startPos + transform.forward * moveDistance;
-        float elapsedTime = 0;
-
-        while (elapsedTime < moveDuration)
-        {
-            transform.position = Vector3.Lerp(startPos, targetPos, elapsedTime / moveDuration);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-
-        transform.position = targetPos;
-        hasRotated = false;
-        isMoving = false;
-    }
     IEnumerator MoveToNewSurface(RaycastHit hit)
     {
         Vector3 startPos = transform.position;
@@ -190,26 +311,252 @@ public class PlayerController : MonoBehaviour
 
         return Physics.Raycast(origin, direction, out hit, frontGroundCheckDistance, groundLayer);
     }
+    bool TryGetGroundInDirection(Vector3 direction, out RaycastHit hit)
+    {
+        Vector3 origin = transform.position;
 
-    IEnumerator Rotate(float angle)
+        return Physics.Raycast(
+            origin,
+            direction.normalized,
+            out hit,
+            frontGroundCheckDistance,
+            groundLayer
+        );
+    }
+
+
+    bool IsWallInDirection(Vector3 direction)
+    {
+        RaycastHit hit;
+
+        Vector3 origin = transform.position + currentUp * wallCheckHeight;
+
+        Debug.DrawRay(origin, direction.normalized * wallCheckDistance, Color.red, 1.0f);
+
+        if (Physics.Raycast(origin, direction.normalized, out hit, wallCheckDistance, wallLayer))
+        {
+            cannotMoveJudgeCount++;
+
+            if (debugCannotMove)
+            {
+                Debug.Log(
+                    "[Determination of immobility made] " +
+                    "Count: " + cannotMoveJudgeCount +
+                    " / Hit: " + hit.collider.name +
+                    " / Layer: " + LayerMask.LayerToName(hit.collider.gameObject.layer)
+                );
+            }
+
+            UpdateCannotMoveDebugText("Decision triggered", hit.collider.name);
+
+            return true;
+        }
+
+        if (debugCannotMove)
+        {
+            Debug.Log("[No wall collision detection]");
+        }
+
+        return false;
+    }
+
+    void ShowCannotMoveMessage()
+    {
+        cannotMoveTextShowCount++;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCannotMoveSE();
+        }
+
+        if (debugCannotMove)
+        {
+            Debug.Log("[Request to display non-movable characters] Count: " + cannotMoveTextShowCount);
+        }
+
+        if (cannotMoveText == null)
+        {
+            Debug.LogWarning("[Failed to display non-movable characters] CannotMoveText is not connected.");
+            UpdateCannotMoveDebugText("Failed to display text", "CannotMoveText None");
+            return;
+        }
+
+        if (messageCoroutine != null)
+        {
+            StopCoroutine(messageCoroutine);
+        }
+
+        messageCoroutine = StartCoroutine(ShowCannotMoveMessageCoroutine());
+    }
+    public void HideCannotMoveMessage()
+    {
+        if (messageCoroutine != null)
+        {
+            StopCoroutine(messageCoroutine);
+            messageCoroutine = null;
+        }
+
+        if (cannotMoveText != null)
+        {
+            cannotMoveText.gameObject.SetActive(false);
+        }
+
+        if (cannotMoveDebugText != null)
+        {
+            cannotMoveDebugText.gameObject.SetActive(false);
+        }
+    }
+    void UpdateCannotMoveDebugText(string state, string detail)
+    {
+        if (cannotMoveDebugText == null)
+        {
+            return;
+        }
+
+        cannotMoveDebugText.text =
+            "Cannot Move Debug\n" +
+            "State : " + state + "\n" +
+            "Detail : " + detail + "\n" +
+            "Judge Count : " + cannotMoveJudgeCount + "\n" +
+            "Text Count : " + cannotMoveTextShowCount;
+    }
+
+    IEnumerator ShowCannotMoveMessageCoroutine()
+    {
+        cannotMoveText.gameObject.SetActive(true);
+        cannotMoveText.text = "ˆÚ“®•s‰Â";
+
+        if (debugCannotMove)
+        {
+            Debug.Log("[Immovable characters are actually displayed]");
+        }
+
+        UpdateCannotMoveDebugText("Characters displayed", "ˆÚ“®•s‰Â");
+
+        yield return new WaitForSecondsRealtime(messageTime);
+
+        cannotMoveText.gameObject.SetActive(false);
+
+        if (debugCannotMove)
+        {
+            Debug.Log("[Hide immovable characters]");
+        }
+    }
+
+
+    Vector3 GetDirectionFromSelection(int directionIndex)
+    {
+        if (directionIndex == -1)
+        {
+            return Quaternion.AngleAxis(-90f, currentUp) * baseForward;
+        }
+        else if (directionIndex == 0)
+        {
+            return baseForward;
+        }
+        else
+        {
+            return Quaternion.AngleAxis(90f, currentUp) * baseForward;
+        }
+    }
+    void RotateVisualToSelectedDirection()
+    {
+        Quaternion targetRotation = Quaternion.LookRotation(selectedMoveDirection, currentUp);
+
+        if (rotateCoroutine != null)
+        {
+            StopCoroutine(rotateCoroutine);
+        }
+
+        rotateCoroutine = StartCoroutine(RotateVisualCoroutine(targetRotation));
+    }
+
+    IEnumerator RotateVisualCoroutine(Quaternion targetRotation)
     {
         isMoving = true;
-        Quaternion startRot = transform.rotation;
-        // Set target rotation by adding the specified angle
-        Quaternion turnRot = Quaternion.AngleAxis(angle, currentUp);
-        Quaternion targetRot = turnRot * startRot;
-        float elapsedTime = 0;
 
-        // Smooth rotation (Lerp)
+        Quaternion startRotation = transform.rotation;
+        float elapsedTime = 0f;
+
         while (elapsedTime < rotationDuration)
         {
-            transform.rotation = Quaternion.Slerp(startRot, targetRot, elapsedTime / rotationDuration);
+            float t = elapsedTime / rotationDuration;
+
+            transform.rotation = Quaternion.Slerp(
+                startRotation,
+                targetRotation,
+                t
+            );
+
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        transform.rotation = targetRot;
-        hasRotated = true;
+        transform.rotation = targetRotation;
+
+        isMoving = false;
+        rotateCoroutine = null;
+    }
+    IEnumerator MoveToSelectedDirection()
+    {
+        isMoving = true;
+
+        if (IsWallInDirection(selectedMoveDirection))
+        {
+            ShowCannotMoveMessage();
+            isMoving = false;
+            yield break;
+        }
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayMoveSE();
+        }
+
+        RaycastHit nextSurfaceHit;
+        if (TryGetGroundInDirection(selectedMoveDirection, out nextSurfaceHit))
+        {
+            yield return MoveToNewSurface(nextSurfaceHit);
+
+
+            baseForward = Vector3.ProjectOnPlane(transform.forward, currentUp).normalized;
+
+            selectedDirection = 0;
+            selectedMoveDirection = baseForward;
+
+            transform.rotation = Quaternion.LookRotation(baseForward, currentUp);
+
+            isMoving = false;
+            yield break;
+        }
+
+
+        Vector3 startPos = transform.position;
+        Vector3 targetPos = startPos + selectedMoveDirection.normalized * moveDistance;
+
+        float elapsedTime = 0f;
+
+        while (elapsedTime < moveDuration)
+        {
+            float t = elapsedTime / moveDuration;
+            transform.position = Vector3.Lerp(startPos, targetPos, t);
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = targetPos;
+
+
+        baseForward = selectedMoveDirection.normalized;
+
+
+        selectedDirection = 0;
+        selectedMoveDirection = baseForward;
+
+        transform.rotation = Quaternion.LookRotation(baseForward, currentUp);
+
         isMoving = false;
     }
+
 }
+

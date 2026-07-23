@@ -36,7 +36,10 @@ public class TitleMenuController : MonoBehaviour
             {
                 selectedIndex = 1;
             }
-
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayUIMoveSE();
+            }
             UpdateMenuVisual();
         }
 
@@ -48,12 +51,19 @@ public class TitleMenuController : MonoBehaviour
             {
                 selectedIndex = 0;
             }
-
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayUIMoveSE();
+            }
             UpdateMenuVisual();
         }
 
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayDecideSE();
+            }
             DecideMenu();
         }
     }

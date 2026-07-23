@@ -149,6 +149,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapGenerator
   csvFile: {fileID: 4900000, guid: 894f0b1c5302f48468002ecfa039feb9, type: 3}
+  easyCsv: {fileID: 0}
+  normalCsv: {fileID: 0}
+  hardCsv: {fileID: 0}
+  randomHellCsv: {fileID: 0}
+  easyCsvStages:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  normalCsvStages:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  hardCsvStages:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   wellTilePrefab: {fileID: 2002779384026034603, guid: ffbce385e3c98f245bf871885546c12b, type: 3}
   pathTilePrefab: {fileID: 3623988929555289169, guid: 6d4bb61f871b2c84ebd6b645576daf39, type: 3}
   trapTilePrefab: {fileID: 0}
@@ -156,12 +175,27 @@ MonoBehaviour:
   player: {fileID: 0}
   faceSize: 6
   tileSize: 2
+  mapWidth: 6
+  mapHeight: 6
+  mapDepth: 6
   goalScale: 0.5
   goalInsideOffset: 0.25
   rotatePreview: 1
   previewRotationSpeed: 8
   previewPosition: {x: 0, y: 0, z: 0}
   previewScale: {x: 0.2, y: 0.2, z: 0.2}
+  useDifficultySettings: 1
+  randomEasyBaseCsv: {fileID: 0}
+  randomNormalBaseCsv: {fileID: 0}
+  randomHardBaseCsv: {fileID: 0}
+  randomHellBaseCsv: {fileID: 0}
+  seamSafeMargin: 1
+  startGoalSafeMargin: 2
+  startRightClearLength: 1
+  startGoalClearRadius: 1
+  extraOpenChance: 8
+  deadEndBranchChance: 35
+  maxDeadEndLength: 3
 --- !u!4 &94450389
 Transform:
   m_ObjectHideFlags: 0
@@ -602,8 +636,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "~\u9032\u3080\u3057\u304B\u306A\u3044~"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
-  m_sharedMaterial: {fileID: 201262500400500573, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 4c5ebc113945dfd428bedff5b81c63a2, type: 2}
+  m_sharedMaterial: {fileID: -6670879807942790280, guid: 4c5ebc113945dfd428bedff5b81c63a2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -818,8 +852,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Start
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
-  m_sharedMaterial: {fileID: 201262500400500573, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 24d9550ffdebf5647bcd2d9da8fb37ce, type: 2}
+  m_sharedMaterial: {fileID: 5935636837934172015, guid: 24d9550ffdebf5647bcd2d9da8fb37ce, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1047,6 +1081,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &935542403
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 935542405}
+  - component: {fileID: 935542404}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &935542404
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 935542403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d98e1fe4ce711954ebbb8ad1b81990e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  bgmSource: {fileID: 0}
+  seSource: {fileID: 0}
+  bgmClip: {fileID: 8300000, guid: 9e84d6114f0c1ba40a638316512e455a, type: 3}
+  cannotMoveSE: {fileID: 8300000, guid: 1700c96eed28c37448136c9b5dbd8c38, type: 3}
+  clearSE: {fileID: 8300000, guid: d0bc08a5d6d15354cb0b10a8423c9739, type: 3}
+  moveSE: {fileID: 8300000, guid: 246b27fef98d6fe46abec43e152b5ca6, type: 3}
+  uiMoveSE: {fileID: 8300000, guid: 8bcdbec26b93d7d4da18aa09690cf6ba, type: 3}
+  decideSE: {fileID: 8300000, guid: 352277e8db62d71449f2f388594f59fe, type: 3}
+--- !u!4 &935542405
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 935542403}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3, z: 27}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1082207410
 GameObject:
   m_ObjectHideFlags: 0
@@ -1081,7 +1167,7 @@ MonoBehaviour:
   arrowText: {fileID: 1965157056}
   normalFontSize: 120
   selectedFontSize: 140
-  arrowOffsetX: -100
+  arrowOffsetX: -150
   gameSceneName: SelectDifficultyScene
 --- !u!4 &1082207412
 Transform:
@@ -1157,8 +1243,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u305D\u306E\u5148\u306F"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
-  m_sharedMaterial: {fileID: 201262500400500573, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 4c5ebc113945dfd428bedff5b81c63a2, type: 2}
+  m_sharedMaterial: {fileID: -6670879807942790280, guid: 4c5ebc113945dfd428bedff5b81c63a2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1407,8 +1493,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Quit
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
-  m_sharedMaterial: {fileID: 201262500400500573, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 24d9550ffdebf5647bcd2d9da8fb37ce, type: 2}
+  m_sharedMaterial: {fileID: 5935636837934172015, guid: 24d9550ffdebf5647bcd2d9da8fb37ce, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1646,8 +1732,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: '>'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
-  m_sharedMaterial: {fileID: 201262500400500573, guid: 624e84fa0e42e284796c124ed22a6099, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 24d9550ffdebf5647bcd2d9da8fb37ce, type: 2}
+  m_sharedMaterial: {fileID: 5935636837934172015, guid: 24d9550ffdebf5647bcd2d9da8fb37ce, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2002,3 +2088,4 @@ SceneRoots:
   - {fileID: 6252294645767075471}
   - {fileID: 1082207412}
   - {fileID: 94450389}
+  - {fileID: 935542405}

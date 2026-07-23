@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 9648c07bf598c81448528bff186da2bc
+guid: 52063226620cbcd45b751a24e1998ff1
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - 851Gkktt
+  - komorebi gothic P
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
